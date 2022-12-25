@@ -11,7 +11,7 @@ const uuid = require('uuid')
 const config = require("../../data")
 
 //Set up default mongoose connection
-const mongoDB = 'mongodb://127.0.0.1:27017/myapp';
+const mongoDB = 'mongodb+srv://Indo:Loveesther567.@cluster0.1o3kiu8.mongodb.net/test';
 mongoose.connect(mongoDB, {useNewUrlParser: true, useUnifiedTopology: true});
 console.log("Connected")
 
