@@ -10,6 +10,7 @@ const dataParser = require('body-parser')
 const fs = require('fs')
 router.use(dataParser.json({extended:true}))
 const path = __dirname.substring(0, __dirname.indexOf("src")) + "/test/"
+console.log(path)
 router.use((req, res, next) => {
     res.append('Access-Control-Allow-Origin', '*');
     res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
