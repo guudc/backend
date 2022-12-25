@@ -2,7 +2,6 @@
 
 const express = require("express")
 const route = require("./src/routes/routes.js")
-require("./src/Services/service.js")  
 const app = express()
 
 app.use("/", route)
