@@ -4,7 +4,7 @@ exports.max_number = 100 //maximum number of address needed for airdrop
 exports.airdrop_amount = 10 //1 IND
 exports.endTime = "Sat Dec 31 2022 14:02:53 GMT+0100 (West Africa Standard Time)"
 exports.airDropState = 'airdrop08'
-exports.voting_threshold_token_amount = 2000 //Threshold amount of tokens to allow for proposal creation
+exports.voting_threshold_token_amount = 2592000 //Threshold amount of tokens to allow for proposal creation
 exports.voting_default_duration = 86400 //duration in seconds
 exports.voting_default_chainid = 80001 //The default voting chain id
 exports.chainId = [80001, 97];exports.rpc = []
