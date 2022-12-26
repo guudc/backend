@@ -236,7 +236,7 @@ exports.getallproposal = (req, res) => {
             Parametres
             id 
         */
-        proposal.getAll((rs) => {console.log(rs)
+        proposal.getAll((rs) => { 
             if(rs.status === true){
                 let _res = []
                 for(let i=0;i<rs.data.length;i++){
