@@ -20,12 +20,6 @@ router.use((req, res, next) => {
 
 //creating main routing functions
 //using POST for main functions
-//to add new user wallet
-router.post('/addwallet', controller.addwallet)
-//to check if the airdrop is still going on
-router.get('/state', controller.state)
-//to get the end date of the airdrop
-router.get('/end', controller.enddate)
 //creating routing functions for the voting
 //to create new proposal
 router.post('/newproposal', controller.newproposal)
