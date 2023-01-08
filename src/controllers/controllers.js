@@ -1,75 +1,11 @@
 //controllers functions
 const config = require('../../data.js')
-const wallet = require('../models/models.js').walletDb
 const proposal = require('../models/models.js').proposalDb
-const data = require('../models/models.js').dataDb
 const abi = require('../Abi/abi.js')
 const web3 = require('web3')
 const id_gen = config.uid //to generate uuid V4
-const airDropState = config.airDropState
-
-/* 
-     Airdrop controllers
-*/               
-//to add new wallet address
-exports.addwallet = (req, res) => {
-    //create new wallet address
-    try{
-        req = req.body;
-        if(web3.utils.isAddress(req.wallet) === true || web3.utils.isAddress(req.wallet) == 'true'){
-           if(!isExpired()){
-                //try and see if wallet has been added
-                getUser(req.wallet, function(e){
-                    if(e === false){
-                        //has not been added
-                        wallet.create(function(e){
-                            if(e.status === true){
-                                res.send({status:true});
-                            }
-                        }, {wallet:req.wallet})
-                    }
-                    else{
-                        //still send successfull
-                        res.send({status:true});
-                    }
-                })
-            }
-            else{
-                res.send({status:'error', msg:'Expired'})
-            }
-        }
-        else{res.send({status:'error', msg:'Wallet address not valid'})}
-    }
-    catch(e){res.send({status:'error', msg:'Internal server error'})}    
-} 
-//to check the status of the airdrop
-exports.state = (req, res) => {
-    try{
-        if(isExpired()){
-            //get if its ongoing
-            getAirDropState((_status) => {
-                if(_status == 'false' || _status === false){
-                    //airdrop is still ongoing
-                    res.send({status:'ongoing'})
-                }
-                else {res.send({status:'completed'})}
-            })
-        }
-        else{res.send({status:'active'})}
-    }
-    catch(e){res.send({status:'error', msg:'Internal server error'})}    
-} 
-//to return the end date of the airdrop
-exports.enddate = (req, res) => {
-    try{
-        res.send({status:true, date:config.endTime});
-    }
-    catch(e){res.send({status:'error', msg:'Internal server error'})}    
-} 
-
 
 /*
-// /*
 //     Voting controllers
 // */
 // //to generate new proposal
@@ -277,31 +213,6 @@ exports.getindbalance = (req, res) => {
 
 
 
-function getUser(wallet_address, func){
-        wallet.get(wallet_address, function(e, stat){
-            if(e.status !== 'error'){
-                 func(stat)
-             }
-            else{func(false)}
-        })
-}
-//to know if the airdrop has expired
-function isExpired() {
-    let timeNow = (new Date(Date())).getTime();
-        if(timeNow > (new Date(config.endTime)).getTime()){
-            return true
-        }
-        else{return false}
-}
-//to get the airdrop state
-function getAirDropState(func){
-    data.get(airDropState, function(e, stat){
-        if(e.status !== 'error'){
-             func(stat.status)
-         }
-        else{func(false)}
-    })
-}
 function doFuncs(type, func){
     //to perform swap functions
     const _web3 = type.web3
