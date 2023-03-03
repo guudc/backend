@@ -1,0 +1,26 @@
+//getUserTx('guudc',(dat) => {console.log(dat)})
+// setTimeout(() => {
+//     let tx_data = {
+//         id:uuid.v4(), sender: 'system', receiver: 'guudc',
+//         data: {
+//             type:'transfer',
+//             amount:1000,
+//             date: (new Date(Date())).getTime()
+//         }
+//     }
+//     tx_data.data['system'] = {
+//         fiat: 0
+//     }
+//     tx_data.data['guudc'] = {
+//         fiat: 1000
+//     }
+//     //save Tx data
+//     tx.create((stat, id) => {
+//         if(stat.status === true) {
+//             console.log(true)
+//         }
+//         else {
+//             console.log(false) 
+//         }
+//     }, tx_data)
+// }, 2000)

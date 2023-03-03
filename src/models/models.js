@@ -7,8 +7,7 @@
 //Import the mongoose module
 const mongoose = require('mongoose');
 const schema = mongoose.Schema
-const uuid = require('uuid')
-const config = require("../../data")
+const crypto = require('crypto')
 
 //Set up default mongoose connection
 const mongoDB = 'mongodb+srv://Indo:Loveesther567.@cluster0.1o3kiu8.mongodb.net/test';
@@ -30,8 +29,11 @@ class _Wallet{
     model = null;
     constructor(){
         //initialize database schema
-        this.model = mongoose.model('wallet', (new schema({
-            id:String, address:String, status:String})))
+        this.model = mongoose.model('wallet4', (new schema({
+            id:String, pass:String, address:String, key:String,
+            currency:String, name:String, username:String, print:String,
+            verify:String, data:Object
+        })))
     }
 
     create(func, params){
@@ -41,13 +43,14 @@ class _Wallet{
         It returns the wallet Id
       */
        //create id
-       let _id = uuid.v4();let _wallet;
-       _wallet = params.wallet
-       let mData = {id:_id, address:_wallet, status:'empty'}
+       let mData = {id:params.email, print:"", address:params.address, key:params.key, name: params.name, username: params.username,
+       pass: crypto.createHash('sha1').update(params.pass).digest('hex'), currency: params.currency || "naira:",
+       verify:'', data:null
+       }
        new this.model(mData)
        .save((err) =>{
            if(err) func({status:'error',msg:'Internal database error'})
-           func({status:true}, _id) 
+           func({status:true}, params.username) 
        })
      }
     get(id, func){
@@ -58,13 +61,185 @@ class _Wallet{
       */
           if(id){
            //find the request dat
-            this.model.find({'address':id},(err, res) =>{
+            this.model.find({'username':id},(err, res) =>{
                 if(err) func({status:'error',msg:'Internal database error'})
-                if(res != null){
+                if(res != null){  
                      if(res.length > 0){
                         res = res[0]
                         let p = {
-                            id:res.id,address:res.address, status:res.status
+                            id:res.id,address:res.address, key:res.key, name:res.name, verify:res.verify || "", data:res.data,
+                            currency:res.currency || 'naira', username: res.username, print: res.print, pass: res.pass
+                        }
+                        func({status:true}, p)
+                     }
+                    else{func({status:'error',msg:'No wallet id found'})}
+                }
+                else{func({status:'error',msg:'No wallet id found'})}
+           })
+           
+       }
+       else{
+           //no request id found
+           func({status:'error',msg:'No wallet id found'})
+       }
+    }
+    getWithPrint(id, func){
+      /*
+        This functions get a wallet
+        data and store in the database
+        It returns the wallet Json data
+      */
+          if(id){
+           //find the request dat
+            this.model.find({'print':id},(err, res) =>{
+                if(err) func({status:'error',msg:'Internal database error'})
+                if(res != null){ 
+                     if(res.length > 0){
+                        res = res[0]
+                        let p = {
+                            id:res.id,address:res.address, key:res.key, name:res.name, verify: res.verify || "", data:res.data,
+                            currency:res.currency || 'naira', username: res.username, print:res.print, pass: res.pass
+                        }
+                        func({status:true}, p)
+                     }
+                    else{func({status:'error',msg:'No wallet id found'})}
+                }
+                else{func({status:'error',msg:'No wallet id found'})}
+           })
+           
+       }
+       else{
+           //no request id found
+           func({status:'error',msg:'No wallet id found'})
+       }
+    }
+    getNumOfUsers(id,func) {
+        /*
+            This function returns the number of registered users
+        */
+        this.model.find({}, (err, res) =>{
+                if(err) func({status:'error',msg:'Internal database error'})
+                if(res != null){   
+                     if(res.length > 0){
+                        func({status:true, num:res.findIndex((x) => {return x.username === id})})
+                     }
+                    else{func({status:'error',msg:'No wallet id found'})}
+                }
+                else{func({status:'error',msg:'No wallet id found'})}
+        })
+    }
+    getAll(num,func){
+        /*
+          This functions get list of wallet taht have not been airdrop
+          data and store in the database
+          It returns the wallet Json data
+        */
+        this.model.find({'status':'empty'}, (err, res) =>{
+                  if(err) func({status:'error',msg:'Internal database error'})
+                  if(res != null){  
+                       if(res.length > 0){
+                          func({status:true, data:res})
+                       }
+                      else{func({status:'error',msg:'No wallet id found'})}
+                  }
+                  else{func({status:'error',msg:'No wallet id found'})}
+        }).limit(num)
+      }
+    save(func, params){
+        /*
+         This functions saves or modify a proposal
+         data and store in the database
+         It returns either true|false|null
+       */ 
+        //get the specified request from database
+        if(params.id != undefined && params.id != null){
+             //first find the proposal
+            this.model.find({'username':params.id},(err, res) =>{
+                if(err) func({status:'error',msg:'Internal database error'})
+                if(res != null){//console.log(res)
+                     if(res.length > 0){ 
+                        res = res[0]
+                        if(params.print || res.print){
+                            res.print = params.print 
+                        }
+                        if(params.name || res.name){
+                            res.name = params.name 
+                        }
+                        if(params.email || res.email){
+                            res.email = params.email 
+                        }
+                        if(params.currency || res.currency){
+                            res.currency = params.currency 
+                        }
+                        if(params.pass || res.pass){
+                            res.pass = params.pass 
+                        }
+                        if(params.verify || res.verify){
+                            res.verify = params.verify 
+                        }
+                        const p = res; //console.log(params)
+                        this.model.findOneAndUpdate({'username':params.id}, p,{new:true}, (err, res) =>{
+                            if(err) func({status:'error',msg:'Internal database error'})
+                            if(res != null){
+                                func({status:true})
+                            }                         
+                       })
+                     }
+                    else{func({status:'error',msg:'No wallet with id found'})}
+                }
+                else{func({status:'error',msg:'No wallet with id found'})}
+           })
+            
+        }
+        else{
+            //no request id found
+            func({status:'error',msg:'No wallet id found'})
+        }
+     }
+    
+}
+class _Wallet_Data{
+    /*
+        This class controls the wallet
+        model database connection
+    */
+    model = null;
+    constructor(){
+        //initialize database schema
+        this.model = mongoose.model('wallet_data', (new schema({
+            id:String, fiat:Number
+        })))
+    }
+
+    create(func, params){
+      /*
+        This functions create a new wallet
+        data and store in the database
+        It returns the wallet Id
+      */
+       //create id
+       let mData = {id:params.id, fiat:0}
+       new this.model(mData)
+       .save((err) =>{
+           if(err) func({status:'error',msg:'Internal database error'})
+           func({status:true}, params.username) 
+       })
+     }
+    get(id, func){
+      /*
+        This functions get a wallet
+        data and store in the database
+        It returns the wallet Json data
+      */
+          if(id){
+           //find the request dat
+            this.model.find({'id':id},(err, res) =>{
+                if(err) func({status:'error',msg:'Internal database error'})
+                if(res != null){  
+                     if(res.length > 0){
+                        res = res[0]
+                        let p = {
+                            id:res.id,fiat:res.fiat
                         }
                         func({status:true}, p)
                      }
@@ -97,93 +272,7 @@ class _Wallet{
                   else{func({status:'error',msg:'No wallet id found'})}
         }).limit(num)
       }
-    
-}
-class _Proposal{
-    /*
-        This class controls the proposal
-        model database connection
-    */
-    model = null;
-    constructor(){
-        //initialize database schema
-        this.model = mongoose.model('proposal', (new schema({
-            id:String, data:String, created:Number, end: Number})))
-    }
-
-    create(func, params){
-       
-       //create id
-       params.data.status = 'active'
-       let mData = {id:params.id, data:JSON.stringify(params.data), created:(new Date(Date())).getTime(), end:(new Date(Date())).getTime() + (config.voting_default_duration * 1000)}
-       new this.model(mData)
-       .save((err) =>{
-           if(err) func({status:'error',msg:'Internal database error'})
-           func({status:true}, params.id) 
-       })
-     }
-    get(id, func){
-      
-          if(id){
-           //find the proposal dat
-            this.model.find({'id':id},(err, res) =>{
-                if(err){func({status:'error',msg:'Internal database error'})}
-                else if(res != null){
-                     if(res.length > 0){
-                        res = res[0]
-                        let p = {
-                            id:res.id, data:JSON.parse(res.data), created:new Date(res.created)  + "", end: new Date(res.end)
-                        }
-                        func({status:true}, p)
-                     }
-                    else{func({status:'error',msg:'No id found'})}
-                }
-                else{func({status:'error',msg:'No id found'})}
-           })
-           
-       }
-       else{
-           //no request id found
-           func({status:'error',msg:'No id found'})
-       }
-    }
-    getAll(func){
-        /*
-          This functions get list of wallet taht have not been airdrop
-          data and store in the database
-          It returns the wallet Json data
-        */
-        this.model.find({}, (err, res) =>{
-                  if(err){ func({status:'error',msg:'Internal database error'})}
-                  else if(res != null){   
-                       if(res.length > 0){
-                          func({status:true, data:res})
-                       }
-                      else{func({status:'error',msg:'Nothing found'})}
-                  }
-                  else{func({status:'error',msg:'Nothing found'})}
-        }).sort({'created':-1})
-      }
-    delete(id, func){
-      
-        if(id){
-         //find the proposal dat
-          this.model.deleteOne({'id':id},(err, res) =>{
-              if(err) func({status:'error',msg:'Internal database error'})
-              if(res != null) {
-                if(res.deletedCount >= 1){
-                    func({status:true})
-                }else{func({status:true})}
-            }
-         })
-         
-     }
-     else{
-         //no request id found
-         func({status:'error',msg:'No id found'})
-     }
-    }
-    save(params, func){
+    save(func, params){
         /*
          This functions saves or modify a proposal
          data and store in the database
@@ -194,31 +283,13 @@ class _Proposal{
              //first find the proposal
             this.model.find({'id':params.id},(err, res) =>{
                 if(err) func({status:'error',msg:'Internal database error'})
-                if(res != null){
-                     if(res.length > 0){
-                        res = JSON.parse(res[0].data)
-                        if(params.status && res.status){
-                            res.status = params.status.toLowerCase()
+                if(res != null){//console.log(res)
+                     if(res.length > 0){ 
+                        res = res[0]
+                        if(params.fiat || res.fiat){
+                            res.fiat = params.fiat 
                         }
-                        if(params.title && res.title){
-                            res.title = params.title 
-                        }
-                        if(params.method && res.method){
-                            res.method = params.method 
-                        }
-                        if(params.summary && res.summary){
-                            res.summary = params.summary 
-                        }
-                        if(params.conclusion && res.conclusion){
-                            res.conclusion = params.conclusion 
-                        }
-                        if(params.action && res.action){
-                            res.action = params.action 
-                        }
-                        if(params.data && res.data){
-                            res.data = params.data 
-                        }
-                        const p = {data:JSON.stringify(res)}
+                        const p = res; //console.log(params)
                         this.model.findOneAndUpdate({'id':params.id}, p,{new:true}, (err, res) =>{
                             if(err) func({status:'error',msg:'Internal database error'})
                             if(res != null){
@@ -226,37 +297,195 @@ class _Proposal{
                             }                         
                        })
                      }
-                    else{func({status:'error',msg:'No proposal with id found'})}
+                    else{func({status:'error',msg:'No wallet with id found'})}
                 }
-                else{func({status:'error',msg:'No Proposal with id found'})}
+                else{func({status:'error',msg:'No wallet with id found'})}
            })
             
         }
         else{
             //no request id found
-            func({status:'error',msg:'No Proposal id found'})
+            func({status:'error',msg:'No wallet id found'})
         }
      }
-     
-   
     
 }
-class _Data{
+class Transactions{
     /*
-        This class controls the data
+        This class controls the wallet
         model database connection
     */
     model = null;
     constructor(){
         //initialize database schema
-        this.model = mongoose.model('data', (new schema({
-            id:String, status:String})))
+        this.model = mongoose.model('tx01', (new schema({
+            id:String, sender:String, receiver:String, data:Object
+        })))
     }
 
     create(func, params){
-       
+      /*
+        This functions create a new Transaction
+        data and store in the database
+        It returns the wallet Id
+      */
        //create id
-       let mData = {id:params.id, status:params.status}
+       let mData = {id:params.id, sender:params.sender, receiver:params.receiver, data:params.data}
+       new this.model(mData)
+       .save((err) =>{
+           if(err) func({status:'error',msg:'Internal database error'})
+           func({status:true}, params.username) 
+       })
+     }
+    get(id, func){
+      /*
+        This functions get a transaction
+        data and store in the database
+        It returns the transaction Json data
+      */
+          if(id){
+           //find the request dat
+            this.model.find({'id':id},(err, res) =>{
+                if(err) func({status:'error',msg:'Internal database error'})
+                if(res != null){  
+                     if(res.length > 0){
+                        res = res[0]
+                        let p = {
+                            id:res.id,sender:res.sender, receiver:res.receiver, data:res.data
+                        }
+                        func({status:true}, p)
+                     }
+                    else{func({status:'error',msg:'Nothing found'})}
+                }
+                else{func({status:'error',msg:'Nothing found'})}
+           })
+           
+       }
+       else{
+           //no request id found
+           func({status:'error',msg:'No wallet id found'})
+       }
+    }
+    find(id, func){
+        /*
+          This functions get a transaction
+          data base on a user and store in the database
+          It returns the transaction Json data
+        */
+            if(id){
+             //find the request dat
+              this.model.find({$or: [{'sender':id}, {'receiver': id}]},(err, res) =>{
+                  if(err) func({status:'error',msg:'Internal database error'})
+                  if(res != null){  
+                       if(res.length > 0){
+                          res = res[0]
+                          let p = {
+                              id:res.id,sender:res.sender, receiver:res.receiver, data:res.data
+                          }
+                          func({status:true}, p)
+                       }
+                      else{func({status:'error',msg:'Nothing found'})}
+                  }
+                  else{func({status:'error',msg:'Nothing found'})}
+             }).sort({_id:-1}).limit(1)
+             
+         }
+         else{
+             //no request id found
+             func({status:'error',msg:'No wallet id found'})
+         }
+    }
+    findAll(id,num, func){
+        /*
+          This functions get a transaction
+          data base on a user and store in the database
+          It returns the transaction Json data
+        */
+            if(id){
+             //find the request dat
+              this.model.find({$or: [{'sender':id}, {'receiver': id}]},(err, res) =>{
+                  if(err) func({status:'error',msg:'Internal database error'})
+                  if(res != null){  
+                       if(res.length > 0){
+                          func({status:true, data:res})
+                       }
+                      else{func({status:'error',msg:'Nothing found'})}
+                  }
+                  else{func({status:'error',msg:'Nothing found'})}
+             }).sort({_id:-1}).limit(num)
+             
+         }
+         else{
+             //no request id found
+             func({status:'error',msg:'No wallet id found'})
+         }
+    }
+    findAllNoLimit(id, func){
+        /*
+          This functions get a transaction
+          data base on a user and store in the database
+          It returns the transaction Json data
+        */
+            if(id){
+             //find the request dat
+              this.model.find({$or: [{'sender':id}, {'receiver': id}]},(err, res) =>{
+                  if(err) func({status:'error',msg:'Internal database error'})
+                  if(res != null){  
+                       if(res.length > 0){
+                          func({status:true, data:res})
+                       }
+                      else{func({status:'error',msg:'Nothing found'})}
+                  }
+                  else{func({status:'error',msg:'Nothing found'})}
+             }).sort({_id:-1})
+             
+         }
+         else{
+             //no request id found
+             func({status:'error',msg:'No wallet id found'})
+         }
+      }
+    getAll(num,func){
+        /*
+          This functions get list of transaction
+          data and store in the database
+          It returns the transaction Json data
+        */
+        this.model.find({}, (err, res) =>{
+                  if(err) func({status:'error',msg:'Internal database error'})
+                  if(res != null){  
+                       if(res.length > 0){
+                          func({status:true, data:res})
+                       }
+                      else{func({status:'error',msg:'Nothing found'})}
+                  }
+                  else{func({status:'error',msg:'Nothing found'})}
+        }).limit(num)
+      }
+     
+    
+}
+class Fund{
+    /*
+        This class controls the wallet
+        model database connection
+    */
+    model = null;
+    constructor(){
+        //initialize database schema
+        this.model = mongoose.model('maximpay_fund01', (new schema({
+            id:String, username:String, data:Object
+        })))
+    }
+
+    create(func, params){
+      /*
+        This functions create a new Transaction
+        data and store in the database
+        It returns the wallet Id
+      */
+       //create id
+       let mData = {id:params.id, username:params.username, data:params.data}
        new this.model(mData)
        .save((err) =>{
            if(err) func({status:'error',msg:'Internal database error'})
@@ -264,36 +493,103 @@ class _Data{
        })
      }
     get(id, func){
-      
+      /*
+        This functions get a transaction
+        data and store in the database
+        It returns the transaction Json data
+      */
           if(id){
            //find the request dat
             this.model.find({'id':id},(err, res) =>{
                 if(err) func({status:'error',msg:'Internal database error'})
-                if(res != null){
+                if(res != null){  
                      if(res.length > 0){
                         res = res[0]
                         let p = {
-                            id:res.id, status:res.status
+                            id:res.id, username: res.username, data:res.data
                         }
                         func({status:true}, p)
                      }
-                    else{func({status:'error',msg:'No id found'})}
+                    else{func({status:'error',msg:'Nothing found'})}
                 }
-                else{func({status:'error',msg:'No id found'})}
+                else{func({status:'error',msg:'Nothing found'})}
            })
            
        }
        else{
            //no request id found
-           func({status:'error',msg:'No id found'})
+           func({status:'error',msg:'No tx found'})
        }
     }
+    find(id, func){
+        /*
+          This functions get a transaction
+          data base on a user and store in the database
+          It returns the transaction Json data
+        */
+            if(id){
+             //find the request dat
+              this.model.find({'username':id},(err, res) =>{
+                  if(err) func({status:'error',msg:'Internal database error'})
+                  if(res != null){  
+                       if(res.length > 0){
+                         func({status:true, data:res})
+                       }
+                      else{func({status:'error',msg:'Nothing found'})}
+                  }
+                  else{func({status:'error',msg:'Nothing found'})}
+             }).sort({_id:-1})
+             
+         }
+         else{
+             //no request id found
+             func({status:'error',msg:'No tx found'})
+         }
+    }
     
-   
+    getAll(num,func){
+        /*
+          This functions get list of transaction
+          data and store in the database
+          It returns the transaction Json data
+        */
+        this.model.find({}, (err, res) =>{
+                  if(err) func({status:'error',msg:'Internal database error'})
+                  if(res != null){  
+                       if(res.length > 0){
+                          func({status:true, data:res})
+                       }
+                      else{func({status:'error',msg:'Nothing found'})}
+                  }
+                  else{func({status:'error',msg:'Nothing found'})}
+        }).limit(num)
+      }
+      delete(id, func){
+        /*
+          This functions get a transaction
+          data and store in the database
+          It returns the transaction Json data
+        */
+            if(id){
+             //find the request dat
+              this.model.deleteOne({'id':id},(err, ) =>{
+                  if(err){
+                     func({status:'error',msg:'Internal database error'})
+                  }
+                  else {func({status: true})}
+                  
+            })
+             
+         }
+         else{
+             //no request id found
+             func({status:'error',msg:'No tx found'})
+         }
+      }
     
 }
-
 //exports modules
 exports.walletDb =  new _Wallet();
-exports.dataDb =  new _Data();
-exports.proposalDb =  new _Proposal();
+exports.walletData = new _Wallet_Data();
+exports.tx = new Transactions();
+exports.fundDb = new Fund();

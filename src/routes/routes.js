@@ -10,7 +10,6 @@ const dataParser = require('body-parser')
 const fs = require('fs')
 router.use(dataParser.json({extended:true}))
 const path = __dirname.substring(0, __dirname.indexOf("src")) + "/test/"
-console.log(path)
 router.use((req, res, next) => {
     res.append('Access-Control-Allow-Origin', '*');
     res.append('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
@@ -18,21 +17,22 @@ router.use((req, res, next) => {
     next();
 });
 
-//creating main routing functions
-//using POST for main functions
-//creating routing functions for the voting
-//to create new proposal
-router.post('/newproposal', controller.newproposal)
-//to get proposal details
-router.post('/getproposal', controller.getproposal)
-//to get all proposal details
-router.get('/allproposal', controller.getallproposal)
-//to modify proposal details
-router.post('/modifyproposal', controller.modifyproposal)
-//to delete proposal
-router.post('/removeproposal', controller.removeproposal)
-//to get IND balance across all chain
-router.post('/getallbalance', controller.getindbalance)
+router.post('/newuser', controller.newuser)
+router.post('/reguserprint', controller.reguserprint)
+router.post('/login', controller.login)
+router.post('/userdata', controller.getuser)
+router.post('/getuser', controller.userdata)
+router.post('/modifyuser', controller.modifyuser)
+router.post('/transfer', controller.transfer)
+router.post('/gettransfer', controller.gettx)
+router.post('/gettx', controller.tx)
+router.post('/getverify', controller.getverify)
+router.post('/verify', controller.verify)
+router.post('/changepass', controller.changepass)
+router.post('/logout', controller.logout)
+router.post('/createpayment', controller.createpayment)
+router.post('/payment', controller.payment)
+router.post('/validatepayment', controller.validatepayment)
 
 //listen to 404 request
 router.get("*", (req, res) =>{
