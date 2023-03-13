@@ -342,75 +342,81 @@ exports.transfer = (req, res) => {
     try{   
         req = req.body;
         //get username from session data
-        if(req.b && req.username && req.amount){ 
+        if(req.b && req.username && req.amount && req.print){ 
             isLogin(res, req.b, (username) => {
                 if(username != req.username){
                     wallet.get(username, (_stat, dat) => {
                         if(_stat.status === true) {  
-                            //check if the receiver exists
-                            wallet.get(req.username, (_stat, dat) => {
-                                if(_stat.status === true) {  
-                                    //get sender and receiver latest tx data
-                                    getUserTx(username, (tx_sender) => {
-                                        getUserTx(req.username, (tx_receiver) => {
-                                            //create new tx data
-                                            const typ = req.type || 'fiat'
-                                            //add the percent value to the transaction
-                                            const fee =  (config.txfee * req.amount)
-                                            if(typ == 'fiat') {
-                                                if(tx_sender.fiat >= ((req.amount * 1) + fee)) {
-                                                    tx_sender.fiat -= req.amount
-                                                    tx_receiver.fiat += req.amount
-                                                    //create TX object
-                                                    let tx_data = {
-                                                        id:uuid.v4(), sender: username, receiver: req.username,
-                                                        data: {
-                                                            type:'transfer',
-                                                            amount:req.amount,
-                                                            date: (new Date(Date())).getTime()
+                            //validate the fingerprint
+                            if(dat.print == req.print) {
+                                //check if the receiver exists
+                                wallet.get(req.username, (_stat, dat) => {
+                                    if(_stat.status === true) {  
+                                        //get sender and receiver latest tx data
+                                        getUserTx(username, (tx_sender) => {
+                                            getUserTx(req.username, (tx_receiver) => {
+                                                //create new tx data
+                                                const typ = req.type || 'fiat'
+                                                //add the percent value to the transaction
+                                                const fee =  (config.txfee * req.amount)
+                                                if(typ == 'fiat') {
+                                                    if(tx_sender.fiat >= ((req.amount * 1) + fee)) {
+                                                        tx_sender.fiat -= req.amount
+                                                        tx_receiver.fiat += req.amount
+                                                        //create TX object
+                                                        let tx_data = {
+                                                            id:uuid.v4(), sender: username, receiver: req.username,
+                                                            data: {
+                                                                type:'transfer',
+                                                                amount:req.amount,
+                                                                date: (new Date(Date())).getTime()
+                                                            }
                                                         }
-                                                    }
-                                                    tx_data.data[username] = {
-                                                        fiat: tx_sender.fiat
-                                                    }
-                                                    tx_data.data[req.username] = {
-                                                        fiat: tx_receiver.fiat
-                                                    }
-                                                    //save Tx data
-                                                    tx.create((stat, id) => {
-                                                        if(stat.status === true) {
-                                                            //create another tx object for the system
-                                                            tx.create((stat, ids) => {
-                                                                if(stat.status === true) {
-                                                                    res.send({status:true, tx_id: id, data: tx_data})
-                                                                }
-                                                                else {
-                                                                    res.send({status:false, msg:'Something went wrong'}) 
-                                                                }
-                                                            }, {
-                                                                id:uuid.v4(), user: username, receiver: 'maxim',
-                                                                data: {
-                                                                    type:'transfer',
-                                                                    amount:fee,
-                                                                    date: (new Date(Date())).getTime()
-                                                                }
-                                                            })
+                                                        tx_data.data[username] = {
+                                                            fiat: tx_sender.fiat
                                                         }
-                                                        else {
-                                                            res.send({status:false, msg:'Something went wrong'}) 
+                                                        tx_data.data[req.username] = {
+                                                            fiat: tx_receiver.fiat
                                                         }
-                                                    }, tx_data)
+                                                        //save Tx data
+                                                        tx.create((stat, id) => {
+                                                            if(stat.status === true) {
+                                                                //create another tx object for the system
+                                                                tx.create((stat, ids) => {
+                                                                    if(stat.status === true) {
+                                                                        res.send({status:true, tx_id: id, data: tx_data})
+                                                                    }
+                                                                    else {
+                                                                        res.send({status:false, msg:'Something went wrong'}) 
+                                                                    }
+                                                                }, {
+                                                                    id:uuid.v4(), user: username, receiver: 'maxim',
+                                                                    data: {
+                                                                        type:'transfer',
+                                                                        amount:fee,
+                                                                        date: (new Date(Date())).getTime()
+                                                                    }
+                                                                })
+                                                            }
+                                                            else {
+                                                                res.send({status:false, msg:'Something went wrong'}) 
+                                                            }
+                                                        }, tx_data)
+                                                    }
+                                                    else {res.send({status:false, msg:'Insufficient amount'})}
                                                 }
-                                                else {res.send({status:false, msg:'Insufficient amount'})}
-                                            }
+                                            })
                                         })
-                                    })
-                                }
-                                else {
-                                    //does not exists,  
-                                    res.send({status:false, msg:'Receiver does not exists'})
-                                }
-                            })
+                                    }
+                                    else {
+                                        //does not exists,  
+                                        res.send({status:false, msg:'Receiver does not exists'})
+                                    }
+                                })
+                            }
+                            else {
+                                res.send({status:false, msg:'Fingerprint does not match'})
+                            }
                         }   
                         else {
                             //does not exists,  
@@ -421,7 +427,7 @@ exports.transfer = (req, res) => {
                 else{res.send({status:'error', msg:'Cannot send to yourself'})}
             }) 
         }
-        else{res.send({status:'error', msg:'session id or username or amount not provided'})}
+        else{res.send({status:'error', msg:'session id or username or amount or fingerprint not provided'})}
     }
     catch(e){console.log(e);res.send({status:'error',  msg:'Internal server error'})}    
 
