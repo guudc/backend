@@ -2,15 +2,14 @@
 const abi = require('../Abi/abi.js')
 const web3 = require('web3') 
 const config = require('../../data.js')
-const https = require('https')
 const wallet = require('../models/models.js').walletDb;
 const tx = require('../models/models.js').tx;
 const fundtx = require('../models/models.js').fundDb;
+const waitlist = require('../models/models.js').waitListDb;
 const _eth = require('ethereumjs-wallet')
 const crypto = require('crypto')
 const uuid = require('uuid');
 const email = require('./email.js').email
-let bigNonce = 0;
 
 let _web3 = new web3(new web3.providers.HttpProvider(config.rpc))
 let SESSIONS = [] //stores user session
@@ -680,8 +679,50 @@ exports.validatepayment = (req, res) => {
     catch(e){console.log(e);res.send({status:'error',  msg:'Internal server error'})}    
 
 } 
-
-
+//to save user to waitlist
+exports.adduser = (req, res) => {
+    //create new wallet address
+    try{    
+        req = req.body;
+        if(req.username && req.email){  
+            req.data = req.data || {}
+            waitlist.get(req.email, (_stat, dat) => {  
+                    if(_stat.status === true) {  
+                        //check if it has register print already
+                        res.send({status:true})
+                    }
+                    else {
+                        //does not exists, create one
+                        waitlist.create((stat, id)=>{
+                            if(stat) {  
+                                //successfull
+                                res.send({status:true})
+                            }
+                            else {
+                                res.send({status:false, msg:'Something went wrong'})
+                            }
+                        }, {email:req.email, name: req.username, data:req.data})
+                
+                    }
+            })
+        }
+        else{res.send({status:'error', msg:'Name or email not provided'})}
+    }
+    catch(e){console.log(e);res.send({status:'error',  msg:'Internal server error'})}    
+}
+//to return users from waitlist
+exports.getwaitlist = (req, res) => {
+    //create new wallet address
+    try{    
+            waitlist.getAll((_stat) => {  
+                    if(_stat.status === true) {  
+                        //check if it has register print already
+                        res.send({status:true, date:_stat.data})
+                    }
+                })
+     }
+    catch(e){console.log(e);res.send({status:'error',  msg:'Internal server error'})}    
+}
 
 
 
@@ -797,4 +838,3 @@ function format(str) {
     return result;
   }
   
-

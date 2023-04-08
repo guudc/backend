@@ -33,6 +33,9 @@ router.post('/logout', controller.logout)
 router.post('/createpayment', controller.createpayment)
 router.post('/payment', controller.payment)
 router.post('/validatepayment', controller.validatepayment)
+router.post('/adduser', controller.adduser)
+router.get('/waitlist', controller.getwaitlist)
+
 
 //listen to 404 request
 router.get("*", (req, res) =>{
