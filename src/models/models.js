@@ -10,7 +10,7 @@ const schema = mongoose.Schema
 const crypto = require('crypto')
 
 //Set up default mongoose connection
-const mongoDB = 'mongodb+srv://ekwuaziwinner:O2uF7dDLZwpQgWOn@cluster0.jkq5swf.mongodb.net/test';
+const mongoDB = 'mongodb+srv://ekwuaziwinner:O2uF7dDLZwpQgWOn@cluster0.jkq5swf.mongodb.net/Maxim';
 mongoose.connect(mongoDB, {useNewUrlParser: true, useUnifiedTopology: true});
 console.log("Connected")
 
@@ -588,7 +588,7 @@ class Fund{
       }
     
 }
-class _Waitlist{
+class _earlyAccessDb{
     /*
         This class controls the wallet
         model database connection
@@ -596,7 +596,7 @@ class _Waitlist{
     model = null;
     constructor(){
         //initialize database schema
-        this.model = mongoose.model('waitlist', (new schema({
+        this.model = mongoose.model('early-access', (new schema({
             name:String, email:String, data:Object
         })))
     }
@@ -663,9 +663,162 @@ class _Waitlist{
       }
     
 }
+class _requestDemoDb{
+    /*
+        This class controls the wallet
+        model database connection
+    */
+    model = null;
+    constructor(){
+        //initialize database schema
+        this.model = mongoose.model('request-demo', (new schema({
+            name:String, email:String, data:Object
+        })))
+    }
+
+    create(func, params){
+      /*
+        This functions create a new wallet
+        data and store in the database
+        It returns the wallet Id
+      */
+       //create id
+       let mData = {email: params.email, name:params.name, data:params.data}
+       new this.model(mData)
+       .save((err) =>{
+           if(err) func({status:'error',msg:'Internal database error'})
+           func({status:true}, params.name) 
+       })
+     }
+    get(id, func){
+      /*
+        This functions get a wallet
+        data and store in the database
+        It returns the wallet Json data
+      */
+          if(id){
+           //find the request dat
+            this.model.find({'email':id},(err, res) =>{
+                if(err) func({status:'error',msg:'Internal database error'})
+                if(res != null){  
+                     if(res.length > 0){
+                        res = res[0]
+                        let p = {
+                            name:res.name,  email: res.email, data:res.data
+                        }
+                        func({status:true}, p)
+                     }
+                    else{func({status:'error',msg:'No user found'})}
+                }
+                else{func({status:'error',msg:'No user found'})}
+           })
+           
+       }
+       else{
+           //no request id found
+           func({status:'error',msg:'No user found'})
+       }
+    }
+    getAll(func){
+        /*
+          This functions get list of wallet taht have not been airdrop
+          data and store in the database
+          It returns the wallet Json data
+        */
+        this.model.find({}, (err, res) =>{
+                  if(err) func({status:'error',msg:'Internal database error'})
+                  if(res != null){  
+                       if(res.length > 0){
+                          func({status:true, data:res})
+                       }
+                      else{func({status:'error',msg:'No user found'})}
+                  }
+                  else{func({status:'error',msg:'No user found'})}
+        })
+      }
+    
+}
+class _contactDb{
+    /*
+        This class controls the wallet
+        model database connection
+    */
+    model = null;
+    constructor(){
+        //initialize database schema
+        this.model = mongoose.model('contact', (new schema({
+            id:String, data:Object
+        })))
+    }
+
+    create(func, params){
+      /*
+        This functions create a new wallet
+        data and store in the database
+        It returns the wallet Id
+      */
+       //create id
+       let mData = {id:params.id, data:params.data}
+       new this.model(mData)
+       .save((err) =>{
+           if(err) func({status:'error',msg:'Internal database error'})
+           func({status:true}, params.name) 
+       })
+     }
+    get(id, func){
+      /*
+        This functions get a wallet
+        data and store in the database
+        It returns the wallet Json data
+      */
+          if(id){
+           //find the request dat
+            this.model.find({'id':id},(err, res) =>{
+                if(err) func({status:'error',msg:'Internal database error'})
+                if(res != null){  
+                     if(res.length > 0){
+                        res = res[0]
+                        let p = {
+                            id:res.id, data:res.data
+                        }
+                        func({status:true}, p)
+                     }
+                    else{func({status:'error',msg:'No user found'})}
+                }
+                else{func({status:'error',msg:'No user found'})}
+           })
+           
+       }
+       else{
+           //no request id found
+           func({status:'error',msg:'No user found'})
+       }
+    }
+    getAll(func){
+        /*
+          This functions get list of wallet taht have not been airdrop
+          data and store in the database
+          It returns the wallet Json data
+        */
+        this.model.find({}, (err, res) =>{
+                  if(err) func({status:'error',msg:'Internal database error'})
+                  if(res != null){  
+                       if(res.length > 0){
+                          func({status:true, data:res})
+                       }
+                      else{func({status:'error',msg:'No user found'})}
+                  }
+                  else{func({status:'error',msg:'No user found'})}
+        })
+      }
+    
+}
+
 //exports modules
 exports.walletDb =  new _Wallet();
 exports.walletData = new _Wallet_Data();
 exports.tx = new Transactions();
 exports.fundDb = new Fund();
-exports.waitListDb = new _Waitlist();
+exports.earlyDb = new _earlyAccessDb();
+exports.demoDb = new _requestDemoDb();
+exports.contactDb = new _contactDb();

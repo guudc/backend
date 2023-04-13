@@ -5,7 +5,9 @@ const config = require('../../data.js')
 const wallet = require('../models/models.js').walletDb;
 const tx = require('../models/models.js').tx;
 const fundtx = require('../models/models.js').fundDb;
-const waitlist = require('../models/models.js').waitListDb;
+const earlyDb = require('../models/models.js').earlyDb;
+const demoDb = require('../models/models.js').demoDb;
+const contactDb = require('../models/models.js').contactDb;
 const _eth = require('ethereumjs-wallet')
 const crypto = require('crypto')
 const uuid = require('uuid');
@@ -684,8 +686,16 @@ exports.adduser = (req, res) => {
     //create new wallet address
     try{    
         req = req.body;
-        if(req.username && req.email){  
+        if(req.username && req.email && req.type){  
             req.data = req.data || {}
+            let waitlist;
+            if(req.type == 'early-access') {
+                waitlist = earlyDb;
+            }
+            else {
+                //using request demo db as default
+                waitlist = demoDb;
+            }
             waitlist.get(req.email, (_stat, dat) => {  
                     if(_stat.status === true) {  
                         //check if it has register print already
@@ -706,7 +716,7 @@ exports.adduser = (req, res) => {
                     }
             })
         }
-        else{res.send({status:'error', msg:'Name or email not provided'})}
+        else{res.send({status:'error', msg:'Name, email or type not provided'})}
     }
     catch(e){console.log(e);res.send({status:'error',  msg:'Internal server error'})}    
 }
@@ -723,7 +733,30 @@ exports.getwaitlist = (req, res) => {
      }
     catch(e){console.log(e);res.send({status:'error',  msg:'Internal server error'})}    
 }
-
+//to save user to waitlist
+exports.contact = (req, res) => {
+    //create new wallet address
+    try{    
+        req = req.body;
+        if(req.data){  
+            req.data = req.data || {}
+            let id = uuid.v4()
+             //does not exists, create one
+             contactDb.create((stat, id)=>{
+                if(stat) {  
+                    //successfull
+                    res.send({status:true})
+                }
+                else {
+                    res.send({status:false, msg:'Something went wrong'})
+                }
+            }, {id:id, data:req.data})
+    
+        }
+        else{res.send({status:'error', msg:'No data provided'})}
+    }
+    catch(e){console.log(e);res.send({status:'error',  msg:'Internal server error'})}    
+}
 
 
 function verifyPayment(refId, callback) { 
