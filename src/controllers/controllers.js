@@ -695,6 +695,7 @@ exports.adduser = (req, res) => {
             else {
                 //using request demo db as default
                 waitlist = demoDb;
+                console.log(waitlist)
             }
             waitlist.get(req.email, (_stat, dat) => {  
                     if(_stat.status === true) {  
