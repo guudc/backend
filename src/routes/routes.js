@@ -16,7 +16,7 @@ router.use((req, res, next) => {
     res.append('Access-Control-Allow-Headers', 'Content-Type');
     next();
 });
-
+console.log(0)
 router.post('/newuser', controller.newuser)
 router.post('/reguserprint', controller.reguserprint)
 router.post('/login', controller.login)
